@@ -14,7 +14,7 @@
 
 </div>
 
-> ### ⚠️ Honesty note — read first
+> ### ⚠️ note — 
 > This prototype runs **fully offline with no API keys**. Out of the box:
 > - **Speech recognition is simulated.** Demo voice notes carry their own transcript; real speech needs the browser Web-Speech hint, Whisper, or Bhashini (Whisper and Bhashini hooks are **untested** here).
 > - **Spoken replies are a silent placeholder** of the right length until you `pip install gTTS` (or `edge-tts`).
@@ -31,7 +31,6 @@
 |---|---|
 | **Live demo UI** (after you start the server) | **<http://127.0.0.1:8000/ui>** — tabs: **Ask** · **Documents (admin)** · **Evaluation** · **Metrics** · **WhatsApp simulator** |
 | API docs (FastAPI only) | <http://127.0.0.1:8000/docs> |
-| 5-minute demo + viva Q&A | [docs/DEMO_SCRIPT.md](docs/DEMO_SCRIPT.md) |
 | Requirements checklist | [docs/REQUIREMENTS_CHECKLIST.md](docs/REQUIREMENTS_CHECKLIST.md) |
 | API reference | [docs/API.md](docs/API.md) |
 | Deployment notes | [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) |
