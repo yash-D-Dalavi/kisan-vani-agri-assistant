@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+data/audio/
+data/kb_state.json
+data/eval_additions.jsonl
+logs/
+reports/
+.env

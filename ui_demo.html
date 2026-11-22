@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kisan Vani – Voice Agri Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Mukta:wght@400;600;800&family=Tiro+Devanagari+Hindi&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#eef2ec; --card:#fbfcf9; --ink:#1b2a21; --muted:#5d6e63; --line:#cfd8cc;
+  --field:#2c6b3e; --field-d:#1f4e2c; --turmeric:#d99a00; --chili:#b3342b; --sky:#256a98;
+  --ok-bg:#e1f0e4; --warn-bg:#fbf0d2; --bad-bg:#f8e1de; --info-bg:#dfeaf3;
+  --r:10px; --body:'Mukta','Noto Sans Devanagari',system-ui,sans-serif; --serif:'Tiro Devanagari Hindi','Noto Serif Devanagari',Georgia,serif;
+}
+:root[data-theme="dark"]{ --paper:#111a14; --card:#18241c; --ink:#e4ede6; --muted:#9bb0a1; --line:#2c3d31; --ok-bg:#1c3324; --warn-bg:#3a2f10; --bad-bg:#3b1d1a; --info-bg:#172b3b; --field:#5fb676; --field-d:#8bd4a0;}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){ --paper:#111a14; --card:#18241c; --ink:#e4ede6; --muted:#9bb0a1; --line:#2c3d31; --ok-bg:#1c3324; --warn-bg:#3a2f10; --bad-bg:#3b1d1a; --info-bg:#172b3b; --field:#5fb676; --field-d:#8bd4a0;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.55 var(--body)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--turmeric);outline-offset:2px}
+header{padding:18px 16px 0;max-width:1180px;margin:0 auto;display:flex;flex-wrap:wrap;gap:12px;align-items:end;justify-content:space-between}
+h1{margin:0;font:800 1.6rem/1.1 var(--body);letter-spacing:-.01em}
+h1 small{display:block;font:400 .85rem var(--body);color:var(--muted);margin-top:4px}
+.furrow{height:10px;max-width:1180px;margin:10px auto 0;background:repeating-linear-gradient(100deg,var(--field) 0 14px,transparent 14px 20px);opacity:.55;border-radius:6px}
+nav{max-width:1180px;margin:12px auto 0;padding:0 16px;display:flex;gap:4px;overflow-x:auto;border-bottom:1px solid var(--line)}
+nav button{background:none;border:0;border-bottom:3px solid transparent;padding:10px 14px;cursor:pointer;color:var(--muted);white-space:nowrap;font-weight:600}
+nav button[aria-selected=true]{color:var(--ink);border-color:var(--field)}
+main{max-width:1180px;margin:0 auto;padding:16px}
+.banner{max-width:1180px;margin:10px auto 0;padding:10px 16px;border-radius:var(--r);background:var(--bad-bg);border:1px solid var(--chili);display:none}
+.banner.show{display:block}
+.grid{display:grid;grid-template-columns:minmax(300px,380px) 1fr;gap:16px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px}
+.card h2{margin:0 0 8px;font-size:1.05rem}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+textarea,input[type=text],input[type=password],select{width:100%;background:var(--paper);border:1px solid var(--line);border-radius:8px;padding:8px 10px}
+textarea{min-height:84px;resize:vertical;font-family:var(--serif);font-size:1.1rem}
+.btn{border:1px solid var(--field);background:var(--field);color:#fff;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:600}
+:root[data-theme="dark"] .btn{color:#0d1a12}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--line)}
+.btn.sm{padding:3px 10px;font-size:.85rem}
+.btn:disabled{opacity:.5;cursor:wait}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{border:1px solid var(--line);background:var(--paper);border-radius:999px;padding:4px 11px;cursor:pointer;font-size:.9rem;text-align:left}
+.chip:hover{border-color:var(--field)}
+.chip .lg{font-weight:800;color:var(--field);margin-right:6px}
+.chip.refuse{border-style:dashed;border-color:var(--chili)}
+.group{margin:10px 0 4px;font-weight:600;color:var(--muted);font-size:.85rem}
+.stamp{display:inline-block;font-weight:800;padding:3px 14px;border:3px solid;border-radius:6px;transform:rotate(-2deg);font-size:1.05rem}
+.stamp.answer{color:var(--field);background:var(--ok-bg)} .stamp.refuse{color:var(--chili);background:var(--bad-bg)}
+.stamp.ask_repeat,.stamp.ask_clarify{color:#8a5f00;background:var(--warn-bg);border-color:var(--turmeric)}
+:root[data-theme="dark"] .stamp.ask_repeat,:root[data-theme="dark"] .stamp.ask_clarify{color:var(--turmeric)}
+.answer-text{font:1.2rem/1.75 var(--serif);margin:10px 0;white-space:pre-wrap}
+.meta{color:var(--muted);font-size:.88rem}
+.pill{display:inline-block;border:1px solid var(--line);border-radius:6px;padding:0 8px;font-size:.82rem;margin:2px 4px 2px 0;background:var(--paper)}
+.pill.warn{background:var(--warn-bg);border-color:var(--turmeric)} .pill.bad{background:var(--bad-bg);border-color:var(--chili)} .pill.ok{background:var(--ok-bg);border-color:var(--field)}
+.gate{margin:10px 0}
+.sig{display:grid;grid-template-columns:86px 1fr 44px;gap:8px;align-items:center;font-size:.88rem;margin:3px 0}
+.bar{position:relative;height:12px;background:var(--paper);border:1px solid var(--line);border-radius:6px}
+.bar i{position:absolute;inset:0 auto 0 0;border-radius:5px;background:var(--field)}
+.bar i.low{background:var(--chili)}
+.bar b{position:absolute;top:-4px;bottom:-4px;width:2px;background:var(--ink)}
+.tool{border-left:5px solid var(--sky);background:var(--info-bg);border-radius:8px;padding:10px 12px;margin:10px 0}
+.tool table{border-collapse:collapse;width:100%;margin-top:6px} .tool td,.tool th{padding:3px 8px;text-align:left;border-bottom:1px solid var(--line);font-size:.92rem}
+.handoff{border-left:5px solid var(--chili);background:var(--bad-bg);border-radius:8px;padding:10px 12px;margin:10px 0}
+.disc{border-left:5px solid var(--turmeric);background:var(--warn-bg);border-radius:8px;padding:8px 12px;margin:10px 0;font-size:.92rem}
+.cite{border:1px solid var(--line);border-radius:8px;padding:6px 10px;margin:6px 0;font-size:.9rem;background:var(--paper)}
+table.t{width:100%;border-collapse:collapse;font-size:.9rem} table.t th,table.t td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+table.t th{color:var(--muted);font-weight:600}
+.scroll{overflow-x:auto}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+.kpi{border:1px solid var(--line);border-radius:var(--r);padding:10px 12px;background:var(--card)}
+.kpi.pass{border-left:6px solid var(--field)} .kpi.fail{border-left:6px solid var(--chili)}
+.kpi .v{font-size:1.7rem;font-weight:800;line-height:1.1} .kpi .n{font-size:.85rem;color:var(--muted)}
+.trace .st{display:grid;grid-template-columns:200px 1fr 70px;gap:8px;align-items:center;margin:3px 0;font-size:.9rem}
+.phone{max-width:380px;margin:0 auto;border:8px solid var(--ink);border-radius:26px;background:#e9e2d4;overflow:hidden}
+:root[data-theme="dark"] .phone{background:#0e1712}
+.phone .top{background:var(--field-d);color:#fff;padding:8px 12px;font-weight:600}
+.chat{height:420px;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:6px}
+.msg{max-width:84%;padding:6px 10px;border-radius:10px;white-space:pre-wrap;font-size:.92rem;background:#fff;color:#1b2a21;align-self:flex-start}
+.msg.me{align-self:flex-end;background:#d5f2c8} .msg audio{max-width:220px;height:34px}
+.hide{display:none!important}
+.toast{position:fixed;bottom:16px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:8px 16px;border-radius:8px;z-index:9}
+@media (prefers-reduced-motion:no-preference){.stamp{animation:stamp .25s ease-out}@keyframes stamp{from{transform:rotate(-2deg) scale(1.5);opacity:0}}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Kisan Vani – voice assistant for farmers<small>Hindi · Marathi · English. Answers only from approved documents, with sources and a "data as of" date.</small></h1>
+  <div class="row"><span id="status" class="pill">checking backend…</span><button class="btn ghost sm" id="theme">Dark / light</button></div>
+</header>
+<div class="furrow" aria-hidden="true"></div>
+<div id="offline" class="banner" role="alert"><b>Backend not reachable.</b> Start it with <code>python app.py</code> (or <code>python lite_server.py</code>) and open <code>http://127.0.0.1:8000/ui</code>. Buttons will work once it is running.</div>
+<nav role="tablist" id="tabs">
+  <button role="tab" data-tab="ask" aria-selected="true">Ask</button>
+  <button role="tab" data-tab="admin" aria-selected="false">Documents (admin)</button>
+  <button role="tab" data-tab="eval" aria-selected="false">Evaluation</button>
+  <button role="tab" data-tab="obs" aria-selected="false">Metrics</button>
+  <button role="tab" data-tab="wa" aria-selected="false">WhatsApp simulator</button>
+</nav>
+<main>
+
+<!-- ASK -->
+<section id="tab-ask" class="grid">
+  <div class="card">
+    <h2>Ask a question</h2>
+    <label for="q" class="meta">Type in Hindi, Marathi or English</label>
+    <textarea id="q" lang="mr" placeholder="माझ्या कापसाची पाने पिवळी पडत आहेत, काय करावे?"></textarea>
+    <div class="row" style="margin:8px 0">
+      <select id="lang" style="width:auto" aria-label="Reply language"><option value="">Auto language</option><option value="hi">Hindi</option><option value="mr">Marathi</option><option value="en">English</option></select>
+      <label class="meta"><input type="checkbox" id="tts" checked> Voice reply</label>
+    </div>
+    <div class="row">
+      <button class="btn" id="send">Ask</button>
+      <button class="btn ghost" id="mic" title="Record with microphone">🎤 Record</button>
+      <label class="btn ghost" style="cursor:pointer">Upload voice note<input type="file" id="file" accept="audio/*" hidden></label>
+    </div>
+    <p class="meta" id="micnote"></p>
+    <div id="playrow" class="hide"><div class="group">Your voice note</div><audio id="inaudio" controls style="width:100%"></audio></div>
+    <div class="group">Voice-note presets (Marathi / Hindi)</div>
+    <div class="chips" id="presets"></div>
+    <div class="group">Text examples</div>
+    <div class="chips" id="texts"></div>
+  </div>
+  <div id="result"><div class="card meta">The answer, its sources, confidence and live data will appear here. Pick a preset to start.</div></div>
+</section>
+
+<!-- ADMIN -->
+<section id="tab-admin" class="hide">
+  <div class="card" style="margin-bottom:12px"><div class="row">
+    <label class="meta" for="token">Admin token</label><input type="password" id="token" style="max-width:260px" placeholder="only if the server sets AGRI_TOKENS">
+    <button class="btn" id="loadDocs">Load documents</button><span id="kbstats" class="meta"></span></div></div>
+  <div class="card scroll"><h2>Knowledge base</h2><p class="meta">A document is used in answers only after it is approved. Newer versions replace older ones.</p><table class="t" id="docs"></table></div>
+  <div class="grid" style="margin-top:12px">
+    <div class="card"><h2>Add a document</h2>
+      <form id="docform" class="row" style="flex-direction:column;align-items:stretch">
+        <input type="text" name="doc_id" placeholder="doc id, e.g. maize_sowing_hi" required>
+        <input type="text" name="title" placeholder="Title" required>
+        <textarea name="text" placeholder="Document text (verified advisory)" required lang="hi"></textarea>
+        <div class="row"><select name="language"><option>hi</option><option>mr</option><option>en</option></select><input type="text" name="crop" placeholder="crop, e.g. maize"><input type="text" name="region" placeholder="region" value="Maharashtra"></div>
+        <div class="row"><input type="text" name="source" placeholder="Source" required><input type="text" name="publisher" placeholder="Publisher" required></div>
+        <div class="row"><input type="text" name="doc_date" placeholder="YYYY-MM-DD" required><input type="text" name="topic" placeholder="topic key"><input type="text" name="license" placeholder="licence" value="verify before use"></div>
+        <button class="btn" type="submit">Add (stays unapproved)</button>
+      </form></div>
+    <div class="card"><h2>Retrieval debugger</h2>
+      <div class="row"><input type="text" id="dq" lang="hi" placeholder="कपास गुलाबी सुंडी" style="flex:1"><button class="btn" id="dsearch">Search</button></div>
+      <div class="scroll"><table class="t" id="dres"></table></div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><div class="row"><h2 style="margin:0">Review queue</h2><button class="btn ghost sm" id="loadReview">Refresh</button></div>
+    <p class="meta">Refused, low-confidence and thumbs-down conversations for an expert to check.</p><div class="scroll"><table class="t" id="review"></table></div></div>
+</section>
+
+<!-- EVAL -->
+<section id="tab-eval" class="hide">
+  <div class="card"><div class="row"><h2 style="margin:0">Run the evaluation</h2>
+    <label class="meta"><input type="checkbox" id="evvoice" checked> Include voice end-to-end</label>
+    <button class="btn" id="runEval">Run evaluation</button><span id="evmeta" class="meta"></span></div></div>
+  <div id="evout"></div>
+</section>
+
+<!-- METRICS -->
+<section id="tab-obs" class="hide">
+  <div class="card"><div class="row"><button class="btn" id="loadMetrics">Refresh metrics</button><a class="btn ghost sm" id="promlink" href="/metrics?format=prom" target="_blank" rel="noopener">Prometheus format</a></div></div>
+  <div id="obsout"></div>
+</section>
+
+<!-- WHATSAPP -->
+<section id="tab-wa" class="hide grid">
+  <div class="card"><h2>Send as a farmer</h2>
+    <label class="meta" for="wanum">Phone number (fake)</label><input type="text" id="wanum" value="919000000001">
+    <textarea id="watext" lang="hi" placeholder="कपास में गुलाबी सुंडी"></textarea>
+    <div class="row" style="margin-top:8px"><button class="btn" id="wasend">Send text</button><button class="btn ghost" id="wareset">New farmer (reset consent)</button></div>
+    <div class="group">Voice notes</div><div class="chips" id="wapresets"></div>
+    <p class="meta">Real WhatsApp needs a Meta Business account; here the webhook, signature check, dedup and consent flow run locally.</p></div>
+  <div class="phone"><div class="top">Kisan Vani · WhatsApp</div><div class="chat" id="chat" aria-live="polite"></div></div>
+</section>
+</main>
+<div id="toast" class="toast hide" role="status"></div>
+
+<script>
+"use strict";
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const BASE=location.protocol==="file:"?"http://127.0.0.1:8000":"";
+let lastResp=null, mediaRec=null, chunks=[], recog=null, hint={text:"",conf:0};
+
+function toast(m){const t=$("#toast");t.textContent=m;t.classList.remove("hide");clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.add("hide"),2600)}
+async function api(path,opt={}){
+  const h=Object.assign({},opt.headers||{}); const tk=$("#token").value.trim(); if(tk)h["X-Admin-Token"]=tk;
+  if(opt.json!==undefined){h["Content-Type"]="application/json";opt.body=JSON.stringify(opt.json);delete opt.json}
+  let r; try{r=await fetch(BASE+path,Object.assign({},opt,{headers:h}))}catch(e){$("#offline").classList.add("show");throw new Error("Backend not reachable")}
+  $("#offline").classList.remove("show");
+  const ct=r.headers.get("content-type")||""; const data=ct.includes("json")?await r.json():await r.blob();
+  if(!r.ok){throw new Error((data&&(data.error||data.detail||data.message))||("HTTP "+r.status))}
+  return data;
+}
+const safe=fn=>async(...a)=>{try{return await fn(...a)}catch(e){toast(e.message)}};
+
+/* ---------- theme + tabs ---------- */
+$("#theme").onclick=()=>{const r=document.documentElement;const dark=getComputedStyle(r).getPropertyValue("--paper").trim()==="#111a14";r.dataset.theme=dark?"light":"dark"};
+$$("#tabs button").forEach(b=>b.onclick=()=>{
+  $$("#tabs button").forEach(x=>x.setAttribute("aria-selected",x===b));
+  ["ask","admin","eval","obs","wa"].forEach(t=>$("#tab-"+t).classList.toggle("hide",t!==b.dataset.tab));
+});
+
+/* ---------- health + presets ---------- */
+async function init(){
+  try{
+    const h=await api("/health");
+    $("#status").textContent="online · "+(h.kb?.retrievable??"?")+" approved docs";$("#status").className="pill ok";
+    const p=await api("/demo/presets");
+    const mk=(el,list,fn)=>{el.innerHTML="";list.forEach(v=>{const b=document.createElement("button");b.className="chip"+(v.kind==="refuse"||v.kind==="repeat"?" refuse":"");b.innerHTML=`<span class="lg">${esc(v.lang.toUpperCase())}</span>${esc(v.label)}`;b.onclick=()=>fn(v);el.appendChild(b)})};
+    mk($("#presets"),p.voice||[],v=>safe(askPreset)(v));
+    mk($("#wapresets"),p.voice||[],v=>safe(waPreset)(v));
+    const tx=(p.text||[]).map(t=>typeof t==="string"?{text:t,label:t,lang:"hi"}:{text:t.text||t.query||t.q,label:t.label||t.text||t.query,lang:t.lang||"hi",kind:t.kind});
+    const box=$("#texts");box.innerHTML="";tx.forEach(t=>{const b=document.createElement("button");b.className="chip";b.innerHTML=`<span class="lg">${esc((t.lang||"").toUpperCase())}</span>${esc(t.label)}`;b.onclick=()=>{$("#q").value=t.text;askText()};box.appendChild(b)});
+  }catch(e){$("#status").textContent="offline";$("#status").className="pill bad"}
+}
+
+/* ---------- ask ---------- */
+async function askText(){
+  const text=$("#q").value.trim(); if(!text){toast("Type a question first");return}
+  setBusy(true);
+  try{const body={text,tts:$("#tts").checked};if($("#lang").value)body.lang=$("#lang").value;
+    render(await api("/query/text",{method:"POST",json:body}))}catch(e){toast(e.message)}finally{setBusy(false)}
+}
+$("#send").onclick=askText;
+$("#q").addEventListener("keydown",e=>{if(e.key==="Enter"&&(e.ctrlKey||e.metaKey))askText()});
+function setBusy(b){$("#send").disabled=b;$("#send").textContent=b?"Thinking…":"Ask"}
+async function sendVoice(blob,name,extra={}){
+  const fd=new FormData();fd.append("audio",blob,name);fd.append("tts",$("#tts").checked?"1":"0");
+  if($("#lang").value)fd.append("lang",$("#lang").value);
+  Object.entries(extra).forEach(([k,v])=>fd.append(k,v));
+  const url=URL.createObjectURL(blob);$("#inaudio").src=url;$("#playrow").classList.remove("hide");
+  setBusy(true);try{render(await api("/query/voice",{method:"POST",body:fd}))}finally{setBusy(false)}
+}
+async function askPreset(v){
+  const blob=await api("/demo/voice?id="+encodeURIComponent(v.id)+"&fmt=ogg");
+  await sendVoice(blob,v.id+".ogg");
+}
+$("#file").onchange=safe(async e=>{const f=e.target.files[0];if(f)await sendVoice(f,f.name);e.target.value=""});
+
+/* mic: MediaRecorder for audio + Web Speech API (hi-IN/mr-IN) as the real-speech transcript hint */
+$("#mic").onclick=safe(async()=>{
+  if(mediaRec&&mediaRec.state==="recording"){mediaRec.stop();if(recog)try{recog.stop()}catch(_){}return}
+  if(!navigator.mediaDevices||!window.MediaRecorder){toast("Recording is not supported in this browser. Use a preset or upload.");return}
+  const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+  chunks=[];hint={text:"",conf:0};mediaRec=new MediaRecorder(stream);
+  mediaRec.ondataavailable=e=>chunks.push(e.data);
+  mediaRec.onstop=safe(async()=>{stream.getTracks().forEach(t=>t.stop());$("#mic").textContent="🎤 Record";
+    const blob=new Blob(chunks,{type:mediaRec.mimeType||"audio/webm"});
+    await sendVoice(blob,"recording.webm",hint.text?{asr_hint:hint.text,asr_hint_conf:String(hint.conf)}:{})});
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(SR){recog=new SR();const l=$("#lang").value;recog.lang=l==="mr"?"mr-IN":l==="en"?"en-IN":"hi-IN";recog.interimResults=false;
+    recog.onresult=e=>{const a=e.results[0][0];hint={text:a.transcript,conf:a.confidence||0.8}};try{recog.start()}catch(_){}
+    $("#micnote").textContent="Listening with browser speech recognition ("+recog.lang+"). Press again to stop."}
+  else $("#micnote").textContent="No browser speech recognition here: audio is sent, but real speech needs a Whisper/Bhashini backend.";
+  mediaRec.start();$("#mic").textContent="⏹ Stop";
+});
+
+/* ---------- render result ---------- */
+const ACT={answer:"Answered",refuse:"Refused",ask_repeat:"Asking to repeat",ask_clarify:"Asking to clarify"};
+function sigBars(d){
+  const th=d.thresholds||{},map={asr:"asr_min",retrieval:"retrieval_min",coverage:"coverage_min",grounding:"grounding_min"};
+  return Object.entries(d.signals||{}).map(([k,v])=>{const t=th[map[k]];const low=t!==undefined&&v<t;
+    return `<div class="sig"><span>${esc(k)}</span><div class="bar"><i class="${low?"low":""}" style="width:${Math.round(v*100)}%"></i>${t!==undefined?`<b style="left:${t*100}%" title="minimum ${t}"></b>`:""}</div><span>${v.toFixed(2)}</span></div>`}).join("")
+    +`<div class="meta">Overall confidence <b>${(d.confidence??0).toFixed(2)}</b> (needs ${th.overall_min??"–"}). The dark tick on a bar is the minimum for that signal.</div>`;
+}
+function toolCard(t){
+  if(!t||!t.tool)return"";
+  const demo=t.mode!=="live";let body="";
+  if(!t.ok)body=`<b>Could not fetch data:</b> ${esc(t.error)}`;
+  else if(t.tool==="mandi_price")body=`<b>${esc(t.data.commodity)}</b> prices (₹/quintal)<table><tr><th>Market</th><th>Min</th><th>Modal</th><th>Max</th><th>Date</th></tr>${(t.data.rows||[]).map(r=>`<tr><td>${esc(r.market)}</td><td>${r.min}</td><td><b>${r.modal}</b></td><td>${r.max}</td><td>${esc(r.arrival_date)}</td></tr>`).join("")}</table>`;
+  else body=`<b>${esc(t.data.location)}</b> – 3-day forecast<table><tr><th>Date</th><th>Max/Min °C</th><th>Rain mm</th><th>Chance %</th></tr>${(t.data.days||[]).map(d=>`<tr><td>${esc(d.date)}</td><td>${d.tmax}/${d.tmin}</td><td>${d.rain_mm}</td><td>${d.rain_prob}</td></tr>`).join("")}</table>${(t.data.advisories||[]).map(a=>`<span class="pill warn">${esc(a.code)}</span>`).join("")}`;
+  return `<div class="tool">${body}<div class="meta" style="margin-top:6px">Data as of <b>${esc(t.as_of_display||t.as_of)}</b> · ${esc(t.source)} · ${demo?'<span class="pill warn">DEMO FEED</span>':'<span class="pill ok">LIVE</span>'}${t.from_cache?` · cached ${Math.round(t.cache_age_s||0)}s${t.stale?" (stale)":""}`:""}</div></div>`;
+}
+function render(r){
+  lastResp=r;const d=r.decision,a=r.answer||{},u=r.understanding||{},inp=r.input||{},asr=inp.asr;
+  let h=`<div class="card"><div class="row" style="justify-content:space-between"><span class="stamp ${esc(d.action)}">${esc(ACT[d.action]||d.action)}</span><span class="meta">${esc(r.language?.detected)} → ${esc(r.language?.reply)}${r.language?.code_mixed?" · code-mixed":""}</span></div>`;
+  h+=`<div class="group">What we heard${asr?` (speech recognition ${esc(asr.backend)}, confidence ${(asr.confidence??0).toFixed(2)})`:""}</div><div style="font-family:var(--serif);font-size:1.05rem">${esc(inp.transcript||"—")}</div>`;
+  if(asr&&asr.note)h+=`<div class="meta">${esc(asr.note)}</div>`;
+  if(d.echo_transcript)h+=`<div class="disc">We are not fully sure we heard you correctly. Please confirm the text above or say it again.</div>`;
+  h+=`<div class="meta" style="margin-top:6px">Intent <span class="pill">${esc(u.intent)}</span> crop <span class="pill">${esc(u.entities?.crop||"–")}</span> place <span class="pill">${esc(u.entities?.location||"–")}</span> ${(u.entities?.chemicals||[]).map(c=>`<span class="pill warn">${esc(c)}</span>`).join("")}</div>`;
+  h+=`<div class="answer-text" lang="${esc(r.language?.reply)}">${esc(a.text)}</div>`;
+  if(r.tts&&r.tts.audio_url){h+=`<div class="row"><audio controls src="${BASE+esc(r.tts.audio_url)}"></audio><button class="btn ghost sm" id="speak">🔊 Read aloud (browser voice)</button></div><div class="meta">${r.tts.synthetic_placeholder?"Audio file is a silent placeholder of the right length (install gTTS or edge-tts for real speech). ":""}${r.tts.duration_s}s · ${esc(r.tts.format)}${r.tts.opus_bytes?` · ${Math.round(r.tts.opus_bytes/1024)} KB as WhatsApp voice note`:""}</div>`}
+  h+=toolCard(r.tool);
+  (a.disclaimers||[]).forEach(x=>h+=`<div class="disc">⚠ ${esc(x)}</div>`);
+  const ho=d.handoff||{};if(Object.keys(ho).length)h+=`<div class="handoff"><b>Please talk to an expert</b><br>${Object.entries(ho).map(([k,v])=>`${esc(k)}: <b>${esc(typeof v==="object"?JSON.stringify(v):v)}</b>`).join("<br>")}</div>`;
+  const cs=(a.citations||[]).filter(c=>c.doc_id);if(cs.length){h+=`<div class="group">Sources</div>`+cs.map(c=>`<div class="cite"><b>${esc(c.title||c.doc_id)}</b><br><span class="meta">${esc(c.source||"")} · ${esc(c.publisher||"")} · dated ${esc(c.doc_date||"")}${c.version?` · v${esc(c.version)}`:""}</span></div>`).join("")}
+  h+=`<div class="gate"><div class="group">Why this decision <span class="meta">${(d.reason_codes||[]).map(c=>`<span class="pill ${d.action==="answer"?"ok":"bad"}">${esc(c)}</span>`).join("")}</span></div>${sigBars(d)}</div>`;
+  if(a.grounding){const cl=a.grounding.claims||[];h+=`<div class="meta">Grounding check: ${cl.filter(c=>c.supported).length} of ${cl.length} sentences found in the cited source (score ${a.grounding.score}).</div>`}
+  h+=`<div class="row" style="margin-top:8px"><span class="meta">Was this helpful?</span><button class="btn ghost sm" data-fb="up">👍</button><button class="btn ghost sm" data-fb="down">👎</button></div></div>`;
+  const L=r.latency||{};
+  h+=`<div class="card trace" style="margin-top:12px"><h2>Pipeline trace · ${L.measured_ms??"–"} ms measured${L.projected_s?` · ${L.projected_s}s projected with real models`:""}</h2>`+
+    (L.steps||[]).map(s=>{const mx=Math.max(1,...(L.steps||[]).map(x=>x.ms));const rest=Object.entries(s).filter(([k])=>!["name","ms"].includes(k)).map(([k,v])=>k+"="+v).join(" ");
+      return `<div class="st"><span>${esc(s.name)}<br><span class="meta">${esc(rest)}</span></span><div class="bar"><i style="width:${Math.max(2,s.ms/mx*100)}%"></i></div><span>${s.ms} ms</span></div>`}).join("")+`</div>`;
+  $("#result").innerHTML=h;
+  const sp=$("#speak");if(sp)sp.onclick=()=>{const u=new SpeechSynthesisUtterance(a.spoken_text||a.text);u.lang=r.language?.reply==="mr"?"mr-IN":r.language?.reply==="en"?"en-IN":"hi-IN";speechSynthesis.cancel();speechSynthesis.speak(u)};
+  $$("[data-fb]").forEach(b=>b.onclick=safe(async()=>{await api("/feedback",{method:"POST",json:{request_id:r.request_id,rating:b.dataset.fb}});toast("Thanks, feedback saved")}));
+  $("#result").scrollIntoView({behavior:"smooth",block:"nearest"});
+}
+
+/* ---------- admin ---------- */
+const loadDocs=safe(async()=>{
+  const r=await api("/admin/documents");const s=r.stats||{};
+  $("#kbstats").textContent=`${s.retrievable} retrievable of ${s.documents} · ${s.unapproved} unapproved · ${s.superseded} superseded · ${s.embedder} + ${s.reranker}`;
+  $("#docs").innerHTML=`<tr><th>Approved</th><th>Document</th><th>Crop / region</th><th>Lang</th><th>Dated</th><th>Status</th></tr>`+r.documents.map(d=>`<tr><td><input type="checkbox" aria-label="Approve ${esc(d.doc_id)}" data-doc="${esc(d.doc_id)}" ${d.approved?"checked":""}></td><td><b>${esc(d.title)}</b><br><span class="meta">${esc(d.doc_id)} · ${esc(d.source)}</span></td><td>${esc(d.crop)} / ${esc(d.region)}</td><td>${esc(d.language)}</td><td>${esc(d.doc_date)}${d.review_due?' <span class="pill warn">review due</span>':""}</td><td>${d.retrievable?'<span class="pill ok">in use</span>':d.superseded_by?`<span class="pill">replaced by ${esc(d.superseded_by)}</span>`:'<span class="pill bad">not used</span>'}</td></tr>`).join("");
+  $$("#docs input[data-doc]").forEach(c=>c.onchange=safe(async()=>{try{await api("/admin/approve",{method:"POST",json:{doc_id:c.dataset.doc,approved:c.checked}});toast(c.checked?"Approved":"Approval removed")}catch(e){c.checked=!c.checked;throw e}loadDocs()}));
+});
+$("#loadDocs").onclick=loadDocs;
+$("#docform").onsubmit=safe(async e=>{e.preventDefault();const o=Object.fromEntries(new FormData(e.target));o.season=o.season||"all";o.version=1;
+  const r=await api("/admin/documents",{method:"POST",json:o});toast(r.result.message||r.result.status);loadDocs()});
+$("#dsearch").onclick=safe(async()=>{const r=await api("/admin/search",{method:"POST",json:{query:$("#dq").value}});
+  $("#dres").innerHTML=`<tr><th>#</th><th>Chunk</th><th>Score</th><th>Dense</th><th>BM25</th><th>Coverage</th></tr>`+r.results.map(x=>`<tr><td>${x.rank}</td><td><b>${esc(x.title)}</b><br><span class="meta">${esc(x.chunk_id)}</span></td><td>${x.score}</td><td>${x.dense}</td><td>${x.bm25}</td><td>${x.coverage}</td></tr>`).join("")||"<tr><td>No approved document matches.</td></tr>"});
+const loadReview=safe(async()=>{const r=await api("/admin/review");
+  $("#review").innerHTML=`<tr><th>Query</th><th>Decision</th><th>Reasons</th><th></th></tr>`+(r.queue.length?r.queue.map(x=>`<tr><td>${esc(x.query)}</td><td>${esc(x.action)}</td><td>${(x.reasons||[]).map(c=>`<span class="pill">${esc(c)}</span>`).join("")}</td><td><button class="btn ghost sm" data-p="${esc(x.request_id)}" data-a="${esc(x.action)}">Add to eval set</button></td></tr>`).join(""):"<tr><td colspan=4>Nothing to review yet. Ask a question the assistant should refuse.</td></tr>");
+  $$("[data-p]").forEach(b=>b.onclick=safe(async()=>{await api("/admin/review/promote",{method:"POST",json:{request_id:b.dataset.p,expected_action:b.dataset.a}});toast("Added to the evaluation set")}))});
+$("#loadReview").onclick=loadReview;
+
+/* ---------- evaluation ---------- */
+const fmt=v=>typeof v==="number"?(v<=1.0001&&v>=0?(v*100).toFixed(1)+"%":String(v)):esc(JSON.stringify(v));
+$("#runEval").onclick=safe(async()=>{
+  const b=$("#runEval");b.disabled=true;b.textContent="Running…";
+  try{const r=await api("/eval/run?voice="+($("#evvoice").checked?1:0),{method:"POST"});
+    $("#evmeta").textContent=`${r.n_questions} questions · ${r.generated}`;
+    const m=r.metrics;
+    let h=`<h2 style="margin:14px 0 8px">Targets</h2><div class="cards">`+r.targets.map(t=>`<div class="kpi ${t.pass?"pass":"fail"}"><div class="n">${esc(t.metric)}</div><div class="v">${fmt(t.value)}</div><div class="n">target ${esc(t.op)} ${fmt(t.target)} · ${t.pass?"met":"missed"}</div></div>`).join("")+`</div>`;
+    h+=`<div class="grid" style="margin-top:14px"><div class="card scroll"><h2>Per category</h2><table class="t"><tr><th>Category</th><th>n</th><th>Decision accuracy</th><th>Other</th></tr>`+
+      Object.entries(r.per_category).map(([k,v])=>{const o=typeof v==="object"?v:{value:v};const {n,decision_accuracy,exact_decision_accuracy,...rest}=o;return `<tr><td>${esc(k)}</td><td>${n??""}</td><td>${fmt(decision_accuracy??exact_decision_accuracy??"")}</td><td class="meta">${esc(Object.entries(rest).map(([a,b])=>a+"="+(typeof b==="number"?+b.toFixed(3):JSON.stringify(b))).join(", "))}</td></tr>`}).join("")+`</table></div>`;
+    h+=`<div class="card scroll"><h2>Speech and translation (small fixtures)</h2><table class="t"><tr><th>Set</th><th>n</th><th>WER</th><th>CER</th></tr>`+Object.entries(m.wer_fixture||{}).map(([k,v])=>`<tr><td>${esc(k)}</td><td>${v.n}</td><td>${v.wer}</td><td>${v.cer}</td></tr>`).join("")+`</table><p class="meta">chrF ${m.chrf_fixture} · BLEU ${m.bleu_fixture} · glossary terms kept ${fmt(m.glossary_preservation_fixture)}. Fixtures are illustrative, not a benchmark.</p>
+      <p class="meta">Latency measured p50/p95: ${m.latency_measured_ms?.p50}/${m.latency_measured_ms?.p95} ms. Projected with real ASR, LLM and TTS: ${m.latency_projected_voice_s?.p50}/${m.latency_projected_voice_s?.p95} s. Voice replies within 30 s: ${fmt(m.spoken_reply_within_30s)}.</p></div></div>`;
+    h+=`<div class="card" style="margin-top:14px"><h2>Failures (${r.failures.length})</h2>`+(r.failures.length?`<pre class="meta" style="white-space:pre-wrap">${esc(JSON.stringify(r.failures,null,1))}</pre>`:`<p class="meta">None. Every question got the expected decision.</p>`)+`</div>`;
+    $("#evout").innerHTML=h;
+  }finally{b.disabled=false;b.textContent="Run evaluation"}
+});
+
+/* ---------- metrics ---------- */
+const loadMetrics=safe(async()=>{const m=await api("/metrics");
+  const k=(n,v)=>`<div class="kpi"><div class="n">${n}</div><div class="v">${v}</div></div>`;
+  const dist=o=>Object.entries(o||{}).map(([a,b])=>`<span class="pill">${esc(a)}: ${b}</span>`).join("")||"–";
+  $("#obsout").innerHTML=`<div class="cards" style="margin:12px 0">${k("Requests",m.requests)}${k("Fallback rate",fmt(m.fallback_rate))}${k("p50 / p95 latency",`${m.latency_ms.p50} / ${m.latency_ms.p95} ms`)}${k("Avg cost per query","₹"+m.avg_cost_inr)}${k("Feedback 👍 / 👎",`${m.feedback.up} / ${m.feedback.down}`)}${k("Awaiting review",m.review_pending)}</div>
+  <div class="card"><div>Decisions ${dist(m.decisions)}</div><div>Reason codes ${dist(m.reason_codes)}</div><div>Intents ${dist(m.intents)}</div><div>Languages ${dist(m.languages)}</div><div>Channels ${dist(m.channels)}</div><p class="meta">Phone numbers are masked and users are stored only as a hash.</p></div>
+  <div class="card scroll" style="margin-top:12px"><h2>Recent requests</h2><table class="t"><tr><th>Time</th><th>Query</th><th>Decision</th><th>Conf.</th><th>ms</th></tr>${(m.recent||[]).slice().reverse().map(x=>`<tr><td>${esc((x.ts||"").slice(11,19))}</td><td>${esc(x.query)}</td><td>${esc(x.action)}</td><td>${x.confidence}</td><td>${x.latency_ms}</td></tr>`).join("")}</table></div>`});
+$("#loadMetrics").onclick=loadMetrics;
+
+/* ---------- whatsapp ---------- */
+function bubble(cls,html){const c=$("#chat");const d=document.createElement("div");d.className="msg "+cls;d.innerHTML=html;c.appendChild(d);c.scrollTop=c.scrollHeight}
+function showReplies(r){(r.replies||[]).forEach(m=>{if(m.type==="audio")bubble("",`🎙 voice reply<br><audio controls src="${BASE+esc(m.url)}"></audio>`);else bubble("",esc(m.body))})}
+$("#wasend").onclick=safe(async()=>{const t=$("#watext").value.trim();if(!t)return;bubble("me",esc(t));$("#watext").value="";
+  showReplies(await api("/simulate/whatsapp",{method:"POST",json:{from:$("#wanum").value,text:t}}))});
+async function waPreset(v){bubble("me",`🎙 ${esc(v.label)}`);showReplies(await api("/simulate/whatsapp",{method:"POST",json:{from:$("#wanum").value,preset:v.id}}))}
+$("#wareset").onclick=safe(async()=>{await api("/simulate/whatsapp/reset",{method:"POST",json:{from:$("#wanum").value}});$("#chat").innerHTML="";toast("Chat and consent reset. The next message asks for consent.")});
+
+init();
+</script>
+</body>
+</html>
